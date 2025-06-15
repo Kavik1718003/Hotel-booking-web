@@ -30,6 +30,7 @@ const App = () => {
           <Route index element={<Dashboard/>}/>
           <Route path="add-room" element={<AddRoom/>}/>
           <Route path="list-room" element={<ListRoom/>}/>
+          
            
 
           </Route>

@@ -4,6 +4,57 @@ import { assets, userBookingsDummyData } from '../assets/assets';
 
 const MyBookings = () => {
   const [bookings, setBookings] = useState(userBookingsDummyData);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedBookingId, setSelectedBookingId] = useState(null);
+  const [paymentDetails, setPaymentDetails] = useState({
+    cardNumber: '',
+    expiry: '',
+    cvv: '',
+    name: '',
+  });
+
+  // Open Payment Modal
+  const openPaymentModal = (bookingId) => {
+    setSelectedBookingId(bookingId);
+    setShowModal(true);
+  };
+
+  // Close Modal
+  const closeModal = () => {
+    setShowModal(false);
+    setSelectedBookingId(null);
+    setPaymentDetails({
+      cardNumber: '',
+      expiry: '',
+      cvv: '',
+      name: '',
+    });
+  };
+
+  // Handle Payment Field Changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setPaymentDetails({ ...paymentDetails, [name]: value });
+  };
+
+  // Submit Payment
+  const handlePaymentSubmit = (e) => {
+    e.preventDefault();
+    const updatedBookings = bookings.map((booking) =>
+      booking._id === selectedBookingId ? { ...booking, isPaid: true } : booking
+    );
+    setBookings(updatedBookings);
+    closeModal();
+  };
+
+  // Cancel Booking
+  const handleCancelBooking = (bookingId) => {
+    const confirmCancel = window.confirm('Are you sure you want to cancel this booking?');
+    if (!confirmCancel) return;
+
+    const updatedBookings = bookings.filter((booking) => booking._id !== bookingId);
+    setBookings(updatedBookings);
+  };
 
   return (
     <div className='py-28 md:pb-35 md:pt-32 px-4 md:px-16 lg:px-24 xl:px-32'>
@@ -51,38 +102,108 @@ const MyBookings = () => {
 
             {/* Date & Timings */}
             <div className='flex flex-col justify-center gap-1 text-sm mt-4 md:mt-0 text-gray-600'>
-              <p>
-                <strong>Check-in:</strong>{' '}
-                {new Date(booking.checkInDate).toDateString()}
-              </p>
-              <p>
-                <strong>Check-out:</strong>{' '}
-                {new Date(booking.checkOutDate).toDateString()}
-              </p>
+              <p><strong>Check-in:</strong> {new Date(booking.checkInDate).toDateString()}</p>
+              <p><strong>Check-out:</strong> {new Date(booking.checkOutDate).toDateString()}</p>
             </div>
 
-            {/* Payment Status */}
+            {/* Payment Section */}
             <div className='flex flex-col items-start justify-center pt-3'>
-  <div className='flex items-center gap-2'>
-    {/* Status Dot */}
-    <div className={`h-3 w-3 rounded-full ${booking.isPaid ? 'bg-green-500' : 'bg-red-500'}`}></div>
+              <div className='flex items-center gap-2'>
+                <div className={`h-3 w-3 rounded-full ${booking.isPaid ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                <p className={`text-sm ${booking.isPaid ? 'text-green-600' : 'text-red-600'}`}>
+                  {booking.isPaid ? 'Paid' : 'Unpaid'}
+                </p>
+              </div>
 
-    {/* Status Text */}
-    <p className={`text-sm ${booking.isPaid ? 'text-green-600' : 'text-red-600'}`}>
-      {booking.isPaid ? 'Paid' : 'Unpaid'}
-    </p>
-  </div>
-  {!booking.isPaid && (
-    <button className='px-4 py-1.5 mt-4 text-xs border border-gray-400 rounded-full hover:bg-gray-50 transition-all cursor-pointer'>Pay Now</button>
-  )}
-</div>
+              {/* Pay Now Button */}
+              {!booking.isPaid && (
+                <button
+                  onClick={() => openPaymentModal(booking._id)}
+                  className='px-4 py-1.5 mt-4 text-xs border border-gray-400 rounded-full hover:bg-gray-50 transition-all cursor-pointer'
+                >
+                  Pay Now
+                </button>
+              )}
 
+              {/* Cancel Button — Only if Paid */}
+              {booking.isPaid && (
+                <button
+                  onClick={() => handleCancelBooking(booking._id)}
+                  className='px-4 py-1.5 mt-2 text-xs border border-red-400 text-red-600 rounded-full hover:bg-red-50 transition-all cursor-pointer'
+                >
+                  Cancel Booking
+                </button>
+              )}
+            </div>
           </div>
         ))}
       </div>
+
+      {/* Payment Modal */}
+      {showModal && (
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+          <div className='bg-white p-6 rounded-lg shadow-lg w-full max-w-md'>
+            <h2 className='text-xl font-semibold mb-4'>Enter Payment Details</h2>
+            <form onSubmit={handlePaymentSubmit} className='space-y-4'>
+              <input
+                type='text'
+                name='cardNumber'
+                placeholder='Card Number'
+                value={paymentDetails.cardNumber}
+                onChange={handleInputChange}
+                className='w-full border px-3 py-2 rounded outline-none'
+                required
+              />
+              <div className='flex gap-2'>
+                <input
+                  type='text'
+                  name='expiry'
+                  placeholder='MM/YY'
+                  value={paymentDetails.expiry}
+                  onChange={handleInputChange}
+                  className='w-1/2 border px-3 py-2 rounded outline-none'
+                  required
+                />
+                <input
+                  type='password'
+                  name='cvv'
+                  placeholder='CVV'
+                  value={paymentDetails.cvv}
+                  onChange={handleInputChange}
+                  className='w-1/2 border px-3 py-2 rounded outline-none'
+                  required
+                />
+              </div>
+              <input
+                type='text'
+                name='name'
+                placeholder='Name on Card'
+                value={paymentDetails.name}
+                onChange={handleInputChange}
+                className='w-full border px-3 py-2 rounded outline-none'
+                required
+              />
+              <div className='flex justify-between mt-4'>
+                <button
+                  type='button'
+                  onClick={closeModal}
+                  className='px-4 py-2 bg-gray-300 rounded hover:bg-gray-400'
+                >
+                  Cancel
+                </button>
+                <button
+                  type='submit'
+                  className='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700'
+                >
+                  Pay Now
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default MyBookings;
-
