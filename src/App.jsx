@@ -13,6 +13,7 @@ import AddRoom from './pages/hotelOwner/AddRoom'
 import ListRoom from './pages/hotelOwner/ListRoom'
 
 
+
 const App = () => {
 
   const isOwnerPath = useLocation().pathname.includes("Owner");

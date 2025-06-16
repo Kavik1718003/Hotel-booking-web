@@ -12,7 +12,7 @@ const AddRoom = () => {
 
   const [inputs, setInputs] = useState({
     roomType: '',
-    pricePerNight: 0,
+    pricePerNight: '',
     amenities: {
       'Free WiFi': false,
       'Free Breakfast': false,
@@ -22,18 +22,43 @@ const AddRoom = () => {
     },
   });
 
-  const handleImageChange = (e, key) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImages((prev) => ({
-        ...prev,
-        [key]: file,
-      }));
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    // Basic validation
+    if (!inputs.roomType || !inputs.pricePerNight) {
+      alert('Please fill in Room Type and Price per Night.');
+      return;
     }
+
+    // Prepare amenities list
+    const selectedAmenities = Object.entries(inputs.amenities)
+      .filter(([_, isChecked]) => isChecked)
+      .map(([name]) => name);
+
+    // Prepare image files
+    const imageFiles = Object.values(images).filter((file) => file !== null);
+
+    // Final room data
+    const roomData = {
+      roomType: inputs.roomType,
+      pricePerNight: inputs.pricePerNight,
+      amenities: selectedAmenities,
+      images: imageFiles.map((file) => file.name), // just filenames for example
+    };
+
+    console.log('Room Added:', roomData);
+
+    // Here you would POST `roomData` to the backend using fetch or axios.
+
+    setSuccess(true); // show success message
+    setTimeout(() => setSuccess(false), 3000); // hide after 3 sec
   };
 
   return (
-    <form>
+    <form onSubmit={handleSubmit}>
       <Title
         align='left'
         font='outfit'
@@ -61,7 +86,9 @@ const AddRoom = () => {
               accept='image/*'
               id={`roomImage${key}`}
               hidden
-              onChange={(e) => setImages({...images, [key]: e.target.files[0]})}
+              onChange={(e) =>
+                setImages({ ...images, [key]: e.target.files[0] })
+              }
             />
           </label>
         ))}
@@ -81,11 +108,11 @@ const AddRoom = () => {
             }
             className='border opacity-70 border-gray-300 mt-1 rounded p-2 w-full'
           >
-            <option value="">Select Room Type</option>
-            <option value="Single Bed">Single Bed</option>
-            <option value="Double Bed">Double Bed</option>
-            <option value="Luxury Room">Luxury Room</option>
-            <option value="Family Suite">Family Suite</option>
+            <option value=''>Select Room Type</option>
+            <option value='Single Bed'>Single Bed</option>
+            <option value='Double Bed'>Double Bed</option>
+            <option value='Luxury Room'>Luxury Room</option>
+            <option value='Family Suite'>Family Suite</option>
           </select>
         </div>
 
@@ -111,7 +138,7 @@ const AddRoom = () => {
         {Object.keys(inputs.amenities).map((amenity, index) => (
           <div key={index} className='flex items-center gap-2 py-1'>
             <input
-              type="checkbox"
+              type='checkbox'
               id={`amenities${index + 1}`}
               checked={inputs.amenities[amenity]}
               onChange={() =>
@@ -124,19 +151,25 @@ const AddRoom = () => {
                 })
               }
             />
-            <label htmlFor={`amenities${index + 1}`}> {amenity}</label>
+            <label htmlFor={`amenities${index + 1}`}>{amenity}</label>
           </div>
         ))}
       </div>
 
       {/* Submit Button */}
-     <button
-  type='submit'
-  className='bg-blue-800 text-white px-8 py-2 rounded mt-8 cursor-pointer'
->
-  Add Room
-</button>
+      <button
+        type='submit'
+        className='bg-blue-800 text-white px-8 py-2 rounded mt-8 cursor-pointer'
+      >
+        Add Room
+      </button>
 
+      {/* Success Message */}
+      {success && (
+        <p className='text-green-600 mt-4 font-semibold'>
+          ✅ Room added successfully!
+        </p>
+      )}
     </form>
   );
 };
